@@ -1,0 +1,34 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Arrange files
+        run: |
+          mkdir -p app/src/main/res/xml app/src/main/res/values app/src/main/res/drawable app/src/main/res/mipmap-anydpi-v26 app/src/main/assets app/src/main/java/com/example/screenguard
+          cp app_build.gradle app/build.gradle
+          cp AndroidManifest.xml app/src/main/AndroidManifest.xml
+          cp guard_config.xml app/src/main/res/xml/guard_config.xml
+          cp strings.xml colors.xml app/src/main/res/values/
+          cp ic_shield.xml ic_launcher_foreground.xml app/src/main/res/drawable/
+          cp ic_launcher.xml app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          cp *.kt app/src/main/java/com/example/screenguard/
+          if [ -f nsfw_model.tflite ]; then cp nsfw_model.tflite app/src/main/assets/; fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+      - name: Build debug APK
+        run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScreenGuard-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
